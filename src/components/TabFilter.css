@@ -1,0 +1,41 @@
+.tab-filter {
+  display: flex;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tab-filter__button {
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #DFE5EC;
+  background: #FFFFFF;
+  color: #4A4A4A;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.tab-filter__button:not(:last-child) {
+  border-right: none;
+}
+
+.tab-filter__button.active {
+  background: #2196F3;
+  color: #FFFFFF;
+  border-color: #2196F3;
+}
+
+.tab-filter__button:hover:not(.active) {
+  background: #F1FCFF;
+}
+
+.tab-filter__button:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.tab-filter__button:last-child {
+  border-radius: 0 8px 8px 0;
+} 

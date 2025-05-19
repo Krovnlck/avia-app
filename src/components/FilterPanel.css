@@ -1,0 +1,44 @@
+.filter-panel {
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 240px;
+}
+
+.filter-panel__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4A4A4A;
+  margin: 0 0 20px;
+  text-transform: uppercase;
+}
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-option input[type="checkbox"] {
+  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.filter-option span {
+  font-size: 13px;
+  color: #4A4A4A;
+}
+
+.filter-option:hover {
+  background-color: #F1FCFF;
+} 
