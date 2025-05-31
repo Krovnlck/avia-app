@@ -1,9 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { INITIAL_SORT } from '../constants/structures';
+
+const initialState = {
+  activeTab: 'cheapest'
+};
 
 const sortSlice = createSlice({
   name: 'sort',
-  initialState: INITIAL_SORT,
+  initialState,
   reducers: {
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;

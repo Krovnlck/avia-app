@@ -5,6 +5,8 @@ import FilterPanel from './components/FilterPanel';
 import TabFilter from './components/TabFilter';
 import FlightCard from './components/FlightCard';
 import { fetchTickets, selectFilteredAndSortedTickets, selectTicketsStatus, selectTicketsError, setDisplayCount, selectDisplayCount } from './store/ticketsSlice';
+import { setActiveTab } from './store/sortSlice';
+import { toggleFilter } from './store/filtersSlice';
 
 function App() {
   const dispatch = useDispatch();
@@ -19,6 +21,14 @@ function App() {
 
   const handleLoadMore = () => {
     dispatch(setDisplayCount(displayCount + 5));
+  };
+
+  const handleSortChange = (tab) => {
+    dispatch(setActiveTab(tab));
+  };
+
+  const handleFilterChange = (filter) => {
+    dispatch(toggleFilter(filter));
   };
 
   return (
@@ -41,7 +51,7 @@ function App() {
             </div>
           )}
 
-          {status === 'loading' && (
+          {status === 'loading' && tickets.length === 0 && (
             <div className="loading-container">
               <div className="loading-message">
                 Ищем билеты...

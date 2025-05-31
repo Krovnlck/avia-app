@@ -3,10 +3,9 @@ import { getSearchId, getTickets } from '../services/api';
 
 export const fetchTickets = createAsyncThunk(
   'tickets/fetchTickets',
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, getState }) => {
     try {
       const searchId = await getSearchId();
-      const tickets = [];
       let stop = false;
       let retryCount = 0;
       const MAX_RETRIES = 5;
@@ -17,23 +16,7 @@ export const fetchTickets = createAsyncThunk(
           const response = await getTickets(searchId);
           
           if (response.tickets && response.tickets.length > 0) {
-            response.tickets.forEach(ticket => {
-              const isDuplicate = tickets.some(t => 
-                t.carrier === ticket.carrier && 
-                t.price === ticket.price && 
-                t.segments.every((segment, index) => 
-                  segment.date === ticket.segments[index].date &&
-                  segment.origin === ticket.segments[index].origin &&
-                  segment.destination === ticket.segments[index].destination &&
-                  segment.duration === ticket.segments[index].duration &&
-                  segment.stops.length === ticket.segments[index].stops.length &&
-                  segment.stops.every((stop, i) => stop === ticket.segments[index].stops[i])
-                )
-              );
-              if (!isDuplicate) {
-                tickets.push(ticket);
-              }
-            });
+            dispatch(addTickets(response.tickets));
           }
 
           stop = response.stop;
@@ -49,9 +32,9 @@ export const fetchTickets = createAsyncThunk(
         }
       }
 
-      return tickets;
+      return true;
     } catch (error) {
-      return rejectWithValue(error.message);
+      throw error;
     }
   }
 );
@@ -71,6 +54,23 @@ const ticketsSlice = createSlice({
       state.displayCount = typeof action.payload === 'function' 
         ? action.payload(state.displayCount)
         : action.payload;
+    },
+    addTickets: (state, action) => {
+      const newTickets = action.payload.filter(ticket => {
+        return !state.tickets.some(t => 
+          t.carrier === ticket.carrier && 
+          t.price === ticket.price && 
+          t.segments.every((segment, index) => 
+            segment.date === ticket.segments[index].date &&
+            segment.origin === ticket.segments[index].origin &&
+            segment.destination === ticket.segments[index].destination &&
+            segment.duration === ticket.segments[index].duration &&
+            segment.stops.length === ticket.segments[index].stops.length &&
+            segment.stops.every((stop, i) => stop === ticket.segments[index].stops[i])
+          )
+        );
+      });
+      state.tickets.push(...newTickets);
     }
   },
   extraReducers: (builder) => {
@@ -79,9 +79,8 @@ const ticketsSlice = createSlice({
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(fetchTickets.fulfilled, (state, action) => {
+      .addCase(fetchTickets.fulfilled, (state) => {
         state.status = 'succeeded';
-        state.tickets = action.payload;
         state.error = null;
       })
       .addCase(fetchTickets.rejected, (state, action) => {
@@ -91,9 +90,8 @@ const ticketsSlice = createSlice({
   }
 });
 
-export const { setDisplayCount } = ticketsSlice.actions;
+export const { setDisplayCount, addTickets } = ticketsSlice.actions;
 
-// Selectors
 export const selectAllTickets = (state) => state.tickets.tickets;
 export const selectTicketsStatus = (state) => state.tickets.status;
 export const selectTicketsError = (state) => state.tickets.error;
