@@ -11,14 +11,14 @@ function App() {
   const tickets = useSelector(selectFilteredAndSortedTickets);
   const status = useSelector(selectTicketsStatus);
   const error = useSelector(selectTicketsError);
+  const displayCount = useSelector(selectDisplayCount);
 
   useEffect(() => {
     dispatch(fetchTickets());
   }, [dispatch]);
 
   const handleLoadMore = () => {
-    const currentCount = useSelector(selectDisplayCount);
-    dispatch(setDisplayCount(currentCount + 5));
+    dispatch(setDisplayCount(displayCount + 5));
   };
 
   return (

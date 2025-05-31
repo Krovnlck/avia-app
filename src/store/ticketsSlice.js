@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { getSearchId, getTickets } from '../services/api';
 
 export const fetchTickets = createAsyncThunk(
@@ -77,14 +77,16 @@ const ticketsSlice = createSlice({
     builder
       .addCase(fetchTickets.pending, (state) => {
         state.status = 'loading';
+        state.error = null;
       })
       .addCase(fetchTickets.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.tickets = action.payload;
+        state.error = null;
       })
       .addCase(fetchTickets.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = action.payload || 'Произошла ошибка при загрузке билетов';
       });
   }
 });
@@ -97,40 +99,41 @@ export const selectTicketsStatus = (state) => state.tickets.status;
 export const selectTicketsError = (state) => state.tickets.error;
 export const selectDisplayCount = (state) => state.tickets.displayCount;
 
-export const selectFilteredAndSortedTickets = (state) => {
-  const tickets = selectAllTickets(state);
-  const filters = state.filters;
-  const activeTab = state.sort.activeTab;
-  const displayCount = selectDisplayCount(state);
+export const selectFilteredAndSortedTickets = createSelector(
+  [selectAllTickets, 
+   state => state.filters,
+   state => state.sort.activeTab,
+   selectDisplayCount],
+  (tickets, filters, activeTab, displayCount) => {
+    const filteredTickets = tickets.filter(ticket => {
+      const maxStops = Math.max(...ticket.segments.map(segment => segment.stops.length));
+      return (
+        (maxStops === 0 && filters.direct) ||
+        (maxStops === 1 && filters.oneStop) ||
+        (maxStops === 2 && filters.twoStops) ||
+        (maxStops === 3 && filters.threeStops)
+      );
+    });
 
-  const filteredTickets = tickets.filter(ticket => {
-    const maxStops = Math.max(...ticket.segments.map(segment => segment.stops.length));
-    return (
-      (maxStops === 0 && filters.direct) ||
-      (maxStops === 1 && filters.oneStop) ||
-      (maxStops === 2 && filters.twoStops) ||
-      (maxStops === 3 && filters.threeStops)
-    );
-  });
+    const sortedTickets = [...filteredTickets].sort((a, b) => {
+      switch (activeTab) {
+        case 'cheapest':
+          return a.price - b.price;
+        case 'fastest':
+          const aDuration = a.segments.reduce((sum, segment) => sum + segment.duration, 0);
+          const bDuration = b.segments.reduce((sum, segment) => sum + segment.duration, 0);
+          return aDuration - bDuration;
+        case 'optimal':
+          const aScore = a.price / 100 + a.segments.reduce((sum, segment) => sum + segment.duration, 0) / 60;
+          const bScore = b.price / 100 + b.segments.reduce((sum, segment) => sum + segment.duration, 0) / 60;
+          return aScore - bScore;
+        default:
+          return 0;
+      }
+    });
 
-  const sortedTickets = [...filteredTickets].sort((a, b) => {
-    switch (activeTab) {
-      case 'cheapest':
-        return a.price - b.price;
-      case 'fastest':
-        const aDuration = a.segments.reduce((sum, segment) => sum + segment.duration, 0);
-        const bDuration = b.segments.reduce((sum, segment) => sum + segment.duration, 0);
-        return aDuration - bDuration;
-      case 'optimal':
-        const aScore = a.price / 100 + a.segments.reduce((sum, segment) => sum + segment.duration, 0) / 60;
-        const bScore = b.price / 100 + b.segments.reduce((sum, segment) => sum + segment.duration, 0) / 60;
-        return aScore - bScore;
-      default:
-        return 0;
-    }
-  });
-
-  return sortedTickets.slice(0, displayCount);
-};
+    return sortedTickets.slice(0, displayCount);
+  }
+);
 
 export default ticketsSlice.reducer; 

@@ -29,6 +29,7 @@ export const getTickets = async (searchId) => {
   try {
     const response = await fetch(`${BASE_URL}/tickets?searchId=${searchId}`);
     
+    // Обработка ошибки 500 как части нормального процесса
     if (response.status === 500) {
       return {
         tickets: [],
@@ -37,7 +38,7 @@ export const getTickets = async (searchId) => {
     }
 
     if (!response.ok) {
-      throw new Error('Failed to fetch tickets');
+      throw new Error(`Failed to fetch tickets: ${response.status}`);
     }
     
     const data = await response.json();
