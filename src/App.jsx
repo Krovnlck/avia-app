@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import './App.css';
 import FilterPanel from './components/FilterPanel';
@@ -14,6 +14,23 @@ function App() {
   const status = useSelector(selectTicketsStatus);
   const error = useSelector(selectTicketsError);
   const displayCount = useSelector(selectDisplayCount);
+
+  // Анимированный прогресс-бар
+  const [progress, setProgress] = useState(10);
+
+  useEffect(() => {
+    let interval;
+    if (status === 'loading') {
+      setProgress(10);
+      interval = setInterval(() => {
+        setProgress(prev => (prev < 95 ? prev + Math.random() * 5 : prev));
+      }, 200);
+    } else if (status === 'succeeded' || status === 'failed') {
+      setProgress(100);
+      setTimeout(() => setProgress(0), 500);
+    }
+    return () => clearInterval(interval);
+  }, [status]);
 
   useEffect(() => {
     dispatch(fetchTickets());
@@ -51,10 +68,16 @@ function App() {
             </div>
           )}
 
-          {status === 'loading' && tickets.length === 0 && (
+          {status === 'loading' && (
             <div className="loading-container">
               <div className="loading-message">
                 Ищем билеты...
+              </div>
+              <div className="loading-progress">
+                <div
+                  className="loading-progress-bar"
+                  style={{ width: `${progress}%` }}
+                ></div>
               </div>
             </div>
           )}
